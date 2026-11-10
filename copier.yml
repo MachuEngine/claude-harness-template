@@ -1,0 +1,39 @@
+# Claude Code 개발 하네스 템플릿 (copier)
+#
+# 새 프로젝트:   copier copy gh:MachuEngine/claude-harness-template <경로>
+# 하네스 갱신:   copier update            (프로젝트 루트에서, 작업 트리가 깨끗한 상태로)
+
+_min_copier_version: "9.0.0"
+_subdirectory: template
+_templates_suffix: .jinja
+_answers_file: .copier-answers.yml
+
+# 프로젝트 소유 파일: 처음 한 번만 생성하고, copier update가 다시 건드리지 않는다.
+_skip_if_exists:
+  - CLAUDE.md
+  - scripts/check.sh
+  - .env.example
+
+project_name:
+  type: str
+  help: 프로젝트 이름 (CLAUDE.md 제목에 쓴다)
+
+project_summary:
+  type: str
+  help: 프로젝트 한 줄 설명
+  default: ""
+
+main_model:
+  type: str
+  help: 메인 세션(설계·기획·지휘) 모델 ID. 별칭이 아닌 고정 ID를 쓴다.
+  default: claude-opus-5-5
+
+worker_model:
+  type: str
+  help: implementer·code-reviewer 서브에이전트 모델 ID
+  default: claude-sonnet-5-5
+
+gitleaks_version:
+  type: str
+  help: CI에서 쓸 gitleaks 버전 (릴리스 태그에서 v를 뺀 값)
+  default: 8.18.4
