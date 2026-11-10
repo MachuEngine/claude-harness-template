@@ -104,8 +104,41 @@ check_harness_config() {
   fi
 }
 
+# ── 3. 템플릿 소유 파일 변경 알림 ─────────────────────
+# 템플릿 소유 파일이 커밋 이후 바뀌었는데 copier update로 바뀐 것이 아니면(.copier-answers.yml이 그대로면)
+# 프로젝트에서 직접 고친 것이다. 템플릿 저장소 반영을 잊지 않도록 경고한다. 검사를 실패시키지는 않는다.
+check_template_drift() {
+  section "하네스 템플릿 동기화"
+  local list=".claude/harness/owned-files.txt" paths=() line changed
+
+  if [ ! -f "$list" ]; then
+    warn "$list 이 없어 건너뛴다"
+    return
+  fi
+  if ! git rev-parse --verify HEAD >/dev/null 2>&1; then
+    ok "커밋이 아직 없어 건너뛴다"
+    return
+  fi
+
+  while IFS= read -r line; do
+    case "$line" in ''|'#'*) continue ;; esac
+    paths+=("$line")
+  done < "$list"
+
+  changed="$(git status --porcelain -- "${paths[@]}")"
+  if [ -z "$changed" ]; then
+    ok "템플릿 소유 파일이 마지막 커밋과 같다"
+  elif [ -n "$(git status --porcelain -- .copier-answers.yml)" ]; then
+    ok "copier update로 바뀐 템플릿 소유 파일이다"
+  else
+    warn "템플릿 소유 파일을 프로젝트에서 직접 고쳤다. 다른 프로젝트에도 필요한 변경이면 하네스 템플릿 저장소에도 반영한다 (.claude/harness/WORKFLOW.md '하네스 개선 절차'):"
+    printf '%s\n' "$changed" | sed 's/^/           /'
+  fi
+}
+
 check_secrets
 check_harness_config
+check_template_drift
 
 if [ "$FAILED" -ne 0 ]; then
   echo

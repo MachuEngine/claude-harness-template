@@ -77,6 +77,40 @@ fi
 rm settings.json.rej
 
 echo
+echo "== 템플릿 소유 파일 변경 경고 확인 =="
+git add -A >/dev/null && git -c user.name=t -c user.email=t@t commit -qm init
+# 출력은 변수에 먼저 담는다. pipefail 상태에서 `... | grep -q`를 쓰면 grep이 일찍 끝날 때
+# 앞 명령이 SIGPIPE로 실패해 결과가 뒤집힌다.
+out="$(bash scripts/check.sh 2>&1 || true)"
+if echo "$out" | grep -q '템플릿 소유 파일이 마지막 커밋과 같다'; then
+  ok "변경이 없으면 경고하지 않는다"
+else
+  fail "변경이 없는데 경고 문구가 다르다"
+fi
+
+echo "# 프로젝트에서 직접 고침" >> .claude/agents/implementer.md
+out="$(bash scripts/check.sh 2>&1 || true)"
+if echo "$out" | grep -q '템플릿 소유 파일을 프로젝트에서 직접 고쳤다' && echo "$out" | grep -q 'implementer.md'; then
+  ok "직접 수정을 경고한다"
+else
+  fail "직접 수정을 경고하지 않았다"
+fi
+if bash scripts/check.sh >/dev/null 2>&1; then
+  ok "경고는 검사를 실패시키지 않는다"
+else
+  fail "경고 때문에 검사가 실패했다"
+fi
+
+echo "# copier update 흉내" >> .copier-answers.yml
+out="$(bash scripts/check.sh 2>&1 || true)"
+if echo "$out" | grep -q 'copier update로 바뀐 템플릿 소유 파일이다'; then
+  ok ".copier-answers.yml도 바뀌면 copier update로 본다"
+else
+  fail "copier update 상황을 구분하지 못했다"
+fi
+git checkout -q -- .
+
+echo
 if [ "$FAILED" -ne 0 ]; then
   echo "템플릿 테스트 실패"
   exit 1

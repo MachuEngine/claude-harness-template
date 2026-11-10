@@ -6,6 +6,17 @@
 - MINOR: 새 규칙·에이전트·검사 추가
 - PATCH: 문구 수정, 버그 수정
 
+## v0.2.0 — 2026-11-10
+
+프로젝트에서 템플릿 소유 파일을 고치면 템플릿 저장소 반영을 알린다 (HIR-0002).
+
+- `.claude/harness/owned-files.txt`: 템플릿 소유 파일 목록을 한 곳에 정의
+- `.claude/hooks/template_drift_notice.py`: Edit·Write로 템플릿 소유 파일을 고치면 사용자 알림과 메인 세션 컨텍스트를 남기는 PostToolUse 훅. `.claude/settings.json`에 등록
+- `scripts/harness-check.sh`: 마지막 커밋 이후 템플릿 소유 파일이 바뀌었고 `copier update`가 아니면 경고 (검사는 실패시키지 않음)
+- `WORKFLOW.md`: 템플릿 반영 알림 설명 추가
+
+갱신 시 참고: `.claude/settings.json`에 `hooks` 항목이 추가된다. 프로젝트에서 이미 `hooks`를 정의했다면 병합 충돌을 확인한다.
+
 ## v0.1.0 — 2026-11-10
 
 첫 버전. 첫 적용 프로젝트에서 만든 하네스를 범용 부분과 프로젝트 부분으로 나눠 템플릿으로 옮겼다.

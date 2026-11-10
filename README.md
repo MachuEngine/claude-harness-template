@@ -8,6 +8,7 @@ Claude Code로 개발할 때 쓰는 개발 하네스 템플릿이다. [copier](h
 | --- | --- |
 | 역할 분담 | 메인 세션(Opus)이 설계·계획·지휘, `implementer`(Sonnet)가 구현, `code-reviewer`(Sonnet)가 읽기 전용 검토 |
 | 공통 작업 규칙 | `.claude/harness/WORKFLOW.md`. 프로젝트 `CLAUDE.md`가 `@` import로 불러온다 |
+| 템플릿 반영 알림 | 템플릿 소유 파일을 프로젝트에서 고치면 수정 직후 훅 알림, 검사 실행 시 경고 |
 | 리뷰어 읽기 전용 훅 | `code-reviewer`의 Bash를 git 조회·`ls`·`grep`·`scripts/check.sh`로 제한하는 PreToolUse 훅과 테스트 |
 | 권한 설정 | `.env`, `secrets/`, `*.pem`, `*.key` 읽기 차단 (`.env.example`은 허용), 메인 모델 고정 |
 | 검사 | `scripts/harness-check.sh`(gitleaks 비밀정보 탐지, 설정·훅 검사)와 프로젝트용 `scripts/check.sh` |
@@ -53,7 +54,7 @@ scripts/check.sh
 
 | 구분 | 파일 | 수정 위치 |
 | --- | --- | --- |
-| 템플릿 소유 | `.claude/harness/WORKFLOW.md`, `.claude/agents/`, `.claude/hooks/`, `scripts/harness-check.sh`, `tests/harness/`, `.github/pull_request_template.md` | 이 저장소에서만 고친다 |
+| 템플릿 소유 | `.claude/harness/`, `.claude/agents/`, `.claude/hooks/`, `scripts/harness-check.sh`, `tests/harness/`, `.github/pull_request_template.md` (정확한 목록: `template/.claude/harness/owned-files.txt`) | 이 저장소에서만 고친다 |
 | 병합 | `.claude/settings.json`, `.gitignore`, `.github/workflows/ci.yml` | 프로젝트에서 고쳐도 된다. `copier update`가 병합한다 |
 | 프로젝트 소유 | `CLAUDE.md`, `scripts/check.sh`, `.env.example` | 프로젝트에서 고친다. 처음 한 번만 생성한다 |
 | 관리 파일 | `.copier-answers.yml` | 직접 고치지 않는다 |
@@ -70,6 +71,10 @@ scripts/check.sh
    4. 커밋하고 버전 태그를 붙인다 (`git tag v0.2.0`). copier는 가장 높은 버전 태그를 기준으로 갱신한다.
    5. push한 뒤 각 프로젝트에서 `copier update`를 실행한다.
 3. 프로젝트 안의 템플릿 소유 파일을 급하게 먼저 고쳤다면 같은 작업 안에서 이 저장소에도 반영한다. 반영하지 않으면 다음 `copier update`에서 충돌하거나 변경이 사라진다.
+
+프로젝트에서 템플릿 소유 파일을 고치면 하네스가 알려 준다.
+- Claude가 Edit·Write로 고치면 PostToolUse 훅(`template_drift_notice.py`)이 바로 알림을 띄운다.
+- 에디터나 Bash로 고친 경우는 `scripts/check.sh`가 경고로 보여 준다.
 
 개선 기준: 같은 유형의 문제가 2회 이상 반복되거나, 보안·데이터 손상 위험이 1회라도 발견되면 검토한다. 도입 후에는 효과를 측정하고, 효과가 없으면 수정하거나 제거한다.
 

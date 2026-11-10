@@ -10,5 +10,18 @@
       "Read(**/*.pem)",
       "Read(**/*.key)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/template_drift_notice.py"
+          }
+        ]
+      }
+    ]
   }
 }
