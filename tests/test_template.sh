@@ -45,6 +45,10 @@ grep -q '^model: claude-sonnet-5-5$' .claude/agents/code-reviewer.md && ok "code
 
 echo
 echo "== 생성된 프로젝트에서 검사 실행 =="
+# 이 테스트는 렌더링 결과와 검사 로직을 확인한다. gitleaks 설치 여부와 무관하게 결과가 같도록
+# CI 모드를 끈다. GitHub Actions는 CI=true를 설정하므로, 그대로 두면 gitleaks가 없어서 실패하고
+# 충돌 검출 테스트도 다른 이유로 실패해 검증이 무의미해진다.
+export CI=false
 git init -q -b main
 if bash scripts/check.sh >"$WORK/check.log" 2>&1; then
   ok "scripts/check.sh 통과"
