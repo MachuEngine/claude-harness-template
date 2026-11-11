@@ -6,6 +6,25 @@
 - MINOR: 새 규칙·에이전트·검사 추가
 - PATCH: 문구 수정, 버그 수정
 
+## v0.4.0 — 2026-11-11
+
+스택별 범용 스킬을 스킬 팩으로 묶어 설치할 때 고를 수 있게 한다 (HIR-0004).
+
+- `copier.yml`: 다중 선택 질문 `skill_packs` 추가(기본값 빈 목록). 선택지 `python-backend`, `react-frontend`, `ui-design`
+- 스킬 팩
+  - `python-backend` → `.claude/skills/backend-python/` (SKILL.md, `reference/` 예시 파일 16개)
+  - `react-frontend` → `.claude/skills/frontend-react/` (SKILL.md, `reference/` 예시 파일 13개)
+  - `ui-design` → `.claude/skills/frontend-design/`(Anthropic 원본 SKILL.md·LICENSE.txt 그대로, NOTICE.md), `brand-identity/`, `design-review/`
+- 고른 팩의 스킬 폴더만 생성하고(폴더 이름 조건식), 그 폴더를 `owned-files.txt`에 템플릿 소유로 추가한다. `owned-files.txt`는 `owned-files.txt.jinja`로 바뀌었다(생성 경로는 같다)
+- 프로젝트 보충 규칙 위치 `.claude/project-skills/<스킬>.md`(프로젝트 소유, 템플릿이 만들지 않음). 각 범용 스킬이 첫머리에서 안내한다
+- `WORKFLOW.md`: 파일 소유 표에 스킬 팩 폴더와 `.claude/project-skills/` 추가, "스킬 팩" 절 추가
+- `CLAUDE.md`(새 프로젝트만): 고른 팩에 맞춰 "먼저 읽을 문서"와 "프로젝트 검토 관점"에 스킬 경로를 넣는다
+- 템플릿 테스트: 팩 없음·전체·일부 렌더링의 생성 파일과 `owned-files.txt`, frontend-design 원본 SHA-256, 전체 팩 프로젝트의 검사, `copier update`로 팩 추가·제거
+- 템플릿 저장소 `scripts/check.sh`: 훅 테스트를 `template/` 원본이 아니라 기본값으로 렌더링한 프로젝트에서 실행한다(`owned-files.txt`가 렌더링 대상이 됐기 때문)
+- `_min_copier_version`을 9.8.0으로 올렸다. 다중 선택 질문에 `--data`로 목록을 넘기는 기능이 9.8.0에 들어왔다
+
+갱신 시 참고: copier 9.8 이상이 필요하다. 기존 프로젝트는 `skill_packs`가 빈 목록으로 들어가며 생성 파일은 바뀌지 않는다(`WORKFLOW.md`, `owned-files.txt` 문구만 바뀐다). 팩을 추가하려면 `copier update --defaults --data 'skill_packs=[...]'`를 실행하고, `CLAUDE.md`에 스킬 경로를 직접 적는다. 이미 같은 이름의 스킬 폴더(예: `.claude/skills/frontend-design/`)가 있으면 copier가 덮어쓸지 묻는다. 프로젝트 전용 내용은 먼저 `.claude/project-skills/`로 옮긴다.
+
 ## v0.3.0 — 2026-11-11
 
 code-reviewer가 하위 폴더에서 실행되거나 테스트를 돌려야 할 때 Bash 훅이 정상 명령을 막던 문제를 고친다 (HIR-0003).

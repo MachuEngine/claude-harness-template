@@ -3,7 +3,8 @@
 # 새 프로젝트:   copier copy gh:MachuEngine/claude-harness-template <경로>
 # 하네스 갱신:   copier update            (프로젝트 루트에서, 작업 트리가 깨끗한 상태로)
 
-_min_copier_version: "9.0.0"
+# 9.8.0: 다중 선택 질문(skill_packs)에 --data로 목록을 넘길 수 있는 최소 버전
+_min_copier_version: "9.8.0"
 _subdirectory: template
 _templates_suffix: .jinja
 _answers_file: .copier-answers.yml
@@ -37,3 +38,15 @@ gitleaks_version:
   type: str
   help: CI에서 쓸 gitleaks 버전 (릴리스 태그에서 v를 뺀 값)
   default: 8.18.4
+
+skill_packs:
+  type: str
+  help: |-
+    설치할 스킬 팩 (여러 개 선택 가능, 없으면 빈 목록).
+    선택한 팩의 스킬은 .claude/skills/<스킬>/에 생기고 템플릿 소유 파일이 된다.
+  multiselect: true
+  choices:
+    "python-backend — uv·FastAPI·SQLAlchemy 2·psycopg 3·Alembic·PostgreSQL (backend-python)": python-backend
+    "react-frontend — React·Vite·TypeScript·ESLint·Prettier·Vitest·zod (frontend-react)": react-frontend
+    "ui-design — 화면 디자인·브랜드·디자인 검토 (frontend-design, brand-identity, design-review)": ui-design
+  default: []
