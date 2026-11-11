@@ -9,7 +9,7 @@ Claude Code로 개발할 때 쓰는 개발 하네스 템플릿이다. [copier](h
 | 역할 분담 | 메인 세션(Opus)이 설계·계획·지휘, `implementer`(Sonnet)가 구현, `code-reviewer`(Sonnet)가 읽기 전용 검토 |
 | 공통 작업 규칙 | `.claude/harness/WORKFLOW.md`. 프로젝트 `CLAUDE.md`가 `@` import로 불러온다 |
 | 템플릿 반영 알림 | 템플릿 소유 파일을 프로젝트에서 고치면 수정 직후 훅 알림, 검사 실행 시 경고 |
-| 리뷰어 읽기 전용 훅 | `code-reviewer`의 Bash를 git 조회·`ls`·`grep`·`scripts/check.sh`로 제한하는 PreToolUse 훅과 테스트 |
+| 리뷰어 읽기 전용 훅 | `code-reviewer`의 Bash를 git 조회·`ls`·`grep`·`scripts/check.sh`·테스트와 정적 검사(pytest, ruff, mypy, pyright)로 제한하는 PreToolUse 훅과 테스트 |
 | 권한 설정 | `.env`, `secrets/`, `*.pem`, `*.key` 읽기 차단 (`.env.example`은 허용), 메인 모델 고정 |
 | 검사 | `scripts/harness-check.sh`(gitleaks 비밀정보 탐지, 설정·훅 검사)와 프로젝트용 `scripts/check.sh` |
 | CI·PR | GitHub Actions에서 `scripts/check.sh` 실행, PR 체크리스트 템플릿 |

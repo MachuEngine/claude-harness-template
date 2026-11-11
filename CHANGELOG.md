@@ -6,6 +6,21 @@
 - MINOR: 새 규칙·에이전트·검사 추가
 - PATCH: 문구 수정, 버그 수정
 
+## v0.3.0 — 2026-11-11
+
+code-reviewer가 하위 폴더에서 실행되거나 테스트를 돌려야 할 때 Bash 훅이 정상 명령을 막던 문제를 고친다 (HIR-0003).
+
+- `reviewer_bash_guard.py`: `CLAUDE_PROJECT_DIR` 기준 `scripts/check.sh` 절대 경로 허용
+- `git -C <프로젝트 안쪽 폴더> <조회 명령>` 허용, `git check-ignore` 추가
+- `pytest`, `uv run pytest`, `python -m pytest`, `uv run ruff check`, `uv run ruff format --check`, `uv run mypy`, `uv run pyright` 허용. `--directory`·`--project`는 프로젝트 안쪽 폴더만 허용
+- 도구 옵션은 허용 목록 방식. 목록 밖 옵션, 프로젝트 밖 경로 인자, 셸 확장 문자(`~ * ? [ ] { } !`), `git --no-index`, 중첩 저장소 대상 `git -C`, `uv run python ...`은 차단
+- git도 서브커맨드별 허용 옵션 목록으로 제한(약어·묶음 차단). `git grep --open*`·`-O`·`-f`·`--no-exclude-standard`, `git blame --contents`, 절대 경로·`..` 경로 인자 차단
+- 비밀정보 경로 검사는 대소문자를 구분하지 않음. 중첩 저장소 검사는 프로젝트 루트 직전까지 모든 상위 폴더 대상이며 `-C` 없는 git은 훅 작업 폴더 기준
+- 위치 인자 없는 `pytest`·`ruff` 등은 기준 폴더가 프로젝트 안쪽일 때만 허용. `ruff check`는 `--no-fix`(또는 `--diff`) 필수
+- `code-reviewer.md` 도구 제한 안내 갱신, 훅 테스트 추가
+
+갱신 시 참고: 리뷰어가 `ruff check`를 쓰던 프로젝트는 `--no-fix`를 붙여야 한다. pytest는 테스트 코드를 실행하므로 리뷰어가 완전한 읽기 전용이 아니게 된다. 위험은 HIR-0003에 적었다.
+
 ## v0.2.0 — 2026-11-10
 
 프로젝트에서 템플릿 소유 파일을 고치면 템플릿 저장소 반영을 알린다 (HIR-0002).
