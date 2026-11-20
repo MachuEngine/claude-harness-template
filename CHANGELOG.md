@@ -6,6 +6,16 @@
 - MINOR: 새 규칙·에이전트·검사 추가
 - PATCH: 문구 수정, 버그 수정
 
+## v0.5.0 — 2026-11-20
+
+상태 표시줄을 하네스에 넣는다 (HIR-0006).
+
+- `.claude/harness/statusline.sh`(템플릿 소유): 모델·effort, 컨텍스트 사용률과 토큰 수, 5시간·7일 사용 한도와 초기화까지 남은 시간을 4줄 색상 바로 표시한다. `jq`가 필요하다
+- `.claude/settings.json`: `statusLine` 항목 추가
+- 템플릿 테스트: 스크립트 생성, `statusLine` 설정, 전체 입력·빈 입력 출력 확인
+
+갱신 시 참고: 프로젝트 설정이 개인 설정보다 우선하므로 개인 `statusLine`은 하네스 프로젝트에서 가려진다. 개인 설정을 쓰려면 `.claude/settings.local.json`에 `statusLine`을 둔다.
+
 ## v0.4.1 — 2026-11-12
 - implementer·code-reviewer 보고서 길이 상한과 작성 규칙 추가(메인 세션 토큰 사용 절감). HIR-0005.
 

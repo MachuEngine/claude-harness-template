@@ -47,6 +47,32 @@ grep -q '^\.claude/skills/' .claude/harness/owned-files.txt && fail "스킬 팩 
 grep -q '^skill_packs: \[\]$' .copier-answers.yml && ok "skill_packs 기본값은 빈 목록" || fail "skill_packs 기본값이 빈 목록이 아니다"
 
 echo
+echo "== 상태 표시줄 =="
+[ -f .claude/harness/statusline.sh ] && ok ".claude/harness/statusline.sh 생성" || fail "statusline.sh 없음"
+python3 -c 'import json,sys; c=json.load(open(".claude/settings.json"))["statusLine"]["command"]; sys.exit(0 if c.endswith("/.claude/harness/statusline.sh") else 1)' \
+  && ok "settings.json의 statusLine이 하네스 스크립트를 실행한다" || fail "settings.json에 statusLine 설정이 없다"
+if command -v jq >/dev/null 2>&1; then
+  now=$(date +%s)
+  full="{\"model\":{\"display_name\":\"Opus 5.5\"},\"effort\":{\"level\":\"high\"},\"context_window\":{\"used_percentage\":42,\"context_window_size\":1000000,\"current_usage\":{\"input_tokens\":2,\"cache_creation_input_tokens\":1000,\"cache_read_input_tokens\":102000}},\"rate_limits\":{\"five_hour\":{\"used_percentage\":63,\"resets_at\":$((now + 7800))},\"seven_day\":{\"used_percentage\":85,\"resets_at\":$((now + 360000))}}}"
+  out="$(printf '%s' "$full" | bash .claude/harness/statusline.sh | sed 's/\x1b\[[0-9;]*m//g')"
+  if [ "$(printf '%s\n' "$out" | wc -l | tr -d ' ')" = 4 ] \
+     && echo "$out" | grep -q 'HIGH (3/5)' && echo "$out" | grep -q '103K / 1.0M 토큰' \
+     && echo "$out" | grep -q '2시간 10분 후 초기화' && echo "$out" | grep -q '4일 4시간 후 초기화'; then
+    ok "전체 입력이면 4줄을 출력한다"
+  else
+    fail "상태 표시줄 출력이 다르다:"; echo "$out"
+  fi
+  out="$(printf '%s' '{"model":{"display_name":"Opus 5.5"}}' | bash .claude/harness/statusline.sh | sed 's/\x1b\[[0-9;]*m//g')"
+  if [ "$(printf '%s\n' "$out" | wc -l | tr -d ' ')" = 2 ] && echo "$out" | grep -q '컨텍스트  *--'; then
+    ok "사용 한도 값이 없으면 해당 줄을 생략한다"
+  else
+    fail "값이 없을 때 출력이 다르다:"; echo "$out"
+  fi
+else
+  echo "  [건너뜀] jq가 없어 상태 표시줄 출력 테스트를 건너뛴다"
+fi
+
+echo
 echo "== 생성된 프로젝트에서 검사 실행 =="
 # 이 테스트는 렌더링 결과와 검사 로직을 확인한다. gitleaks 설치 여부와 무관하게 결과가 같도록
 # CI 모드를 끈다. GitHub Actions는 CI=true를 설정하므로, 그대로 두면 gitleaks가 없어서 실패하고

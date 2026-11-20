@@ -1,6 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "model": "{{ main_model }}",
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/harness/statusline.sh"
+  },
   "permissions": {
     "deny": [
       "Read(**/.env)",

@@ -10,6 +10,7 @@ Claude Code로 개발할 때 쓰는 개발 하네스 템플릿이다. [copier](h
 | 공통 작업 규칙 | `.claude/harness/WORKFLOW.md`. 프로젝트 `CLAUDE.md`가 `@` import로 불러온다 |
 | 템플릿 반영 알림 | 템플릿 소유 파일을 프로젝트에서 고치면 수정 직후 훅 알림, 검사 실행 시 경고 |
 | 리뷰어 읽기 전용 훅 | `code-reviewer`의 Bash를 git 조회·`ls`·`grep`·`scripts/check.sh`·테스트와 정적 검사(pytest, ruff, mypy, pyright)로 제한하는 PreToolUse 훅과 테스트 |
+| 상태 표시줄 | `.claude/harness/statusline.sh`. 모델·effort, 컨텍스트 사용률, 5시간·7일 사용 한도와 초기화까지 남은 시간을 색상 바로 표시 (`jq` 필요) |
 | 권한 설정 | `.env`, `secrets/`, `*.pem`, `*.key` 읽기 차단 (`.env.example`은 허용), 메인 모델 고정 |
 | 검사 | `scripts/harness-check.sh`(gitleaks 비밀정보 탐지, 설정·훅 검사)와 프로젝트용 `scripts/check.sh` |
 | CI·PR | GitHub Actions에서 `scripts/check.sh` 실행, PR 체크리스트 템플릿 |
@@ -19,6 +20,7 @@ Claude Code로 개발할 때 쓰는 개발 하네스 템플릿이다. [copier](h
 
 - copier 9.8 이상: `uv tool install copier` 또는 `pipx install copier` (스킬 팩 다중 선택 질문에 `--data`로 목록을 넘기려면 9.8이 필요하다)
 - git, python3
+- jq (상태 표시줄): `brew install jq`
 - gitleaks (로컬에서는 선택, CI에서는 자동 설치): `brew install gitleaks`
 
 ## 새 프로젝트에 설치
