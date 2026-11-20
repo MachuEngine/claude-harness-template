@@ -1,7 +1,8 @@
 #!/bin/bash
 # Claude Code 상태 표시줄 (하네스 템플릿 소유, .claude/settings.json의 statusLine이 실행한다)
-# 표시 항목: 모델·effort, 컨텍스트 사용률과 토큰 수, 5시간·7일 사용 한도와 초기화까지 남은 시간
+# 표시 항목: 설치된 플러그인 모드(Ponytail, Caveman), 모델·effort, 컨텍스트 사용률과 토큰 수, 5시간·7일 사용 한도와 초기화까지 남은 시간
 # 필요 도구: jq. 사용 한도 값은 구독 계정에서만 들어오며, 값이 없으면 해당 줄을 생략한다.
+#   ● Ponytail ON ██░ FULL (2/3) | ● Caveman ON █░░ CAVEMAN (1/3)   ← 설치된 플러그인만
 #   ● Model      Opus 5.5   Effort ■■■□□ HIGH (3/5)
 #   ● 컨텍스트   ██░░░░  10%  103K / 1.0M 토큰
 #   ● 5시간 한도 ██░░░░  25%  10분 후 초기화
@@ -80,6 +81,67 @@ row() {
     "$(bar "$pct" "$(fill_color "$pct" "$4")" "$BAR_W")" \
     "$B" "$pct" "$R" "$GRAY" "$5" "$R"
 }
+
+# ── 0줄: 플러그인 모드 (Ponytail, Caveman) ──
+# 플러그인이 남긴 모드 파일을 읽는다. 링크 파일은 거부하고, 내용은 64바이트·[a-z0-9-]만 남긴다.
+CFG="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+read_mode() {
+  [ -f "$1" ] && [ ! -L "$1" ] || return 0
+  head -c 64 "$1" 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9-'
+}
+# $1: 점·바 색 $2: 이름 $3: 표시 단계(빈 값이면 OFF) $4: 단계 번호(0이면 단계 바 생략)
+plugin_badge() {
+  local color=$1 name=$2 label=$3 lv=$4 i cells=""
+  if [ -z "$label" ]; then
+    printf '%s●%s %s%s%s %sOFF%s' "$GRAY" "$R" "$B" "$name" "$R" "$GRAY" "$R"
+    return
+  fi
+  printf '%s●%s %s%s%s %sON%s' "$color" "$R" "$B" "$name" "$R" "$color" "$R"
+  if [ "$lv" -gt 0 ]; then
+    for ((i = 1; i <= 3; i++)); do
+      if [ "$i" -le "$lv" ]; then cells+="${color}█"; else cells+="${EMPTY}█"; fi
+    done
+    printf ' %s%s %s%s%s %s(%d/3)%s' "$cells" "$R" "$B" "$label" "$R" "$GRAY" "$lv" "$R"
+  else
+    printf ' %s%s%s' "$B" "$label" "$R"
+  fi
+}
+
+pt_mode=$(read_mode "$CFG/.ponytail-active")
+case "$pt_mode" in
+  lite) pt_label=LITE; pt_lv=1 ;;
+  ''|full) pt_label=FULL; pt_lv=2 ;;
+  ultra) pt_label=ULTRA; pt_lv=3 ;;
+  *) pt_label=$(printf '%s' "$pt_mode" | tr '[:lower:]' '[:upper:]'); pt_lv=0 ;;
+esac
+[ -f "$CFG/.ponytail-active" ] || pt_label=""
+
+sid=$(j '.session_id')
+case "$sid" in ''|*[!A-Za-z0-9_-]*) sid="" ;; esac
+cv_flag="$CFG/.caveman-active"
+[ -n "$sid" ] && [ -f "$CFG/.caveman-sessions/$sid.mode" ] && cv_flag="$CFG/.caveman-sessions/$sid.mode"
+cv_mode=$(read_mode "$cv_flag")
+case "$cv_mode" in
+  caveman|lite|full) cv_label=CAVEMAN; cv_lv=1 ;;
+  ultracave|ultra) cv_label=ULTRA; cv_lv=2 ;;
+  megacave|wenyan|wenyan-*) cv_label=MEGA; cv_lv=3 ;;
+  commit|review|compress) cv_label=$(printf '%s' "$cv_mode" | tr '[:lower:]' '[:upper:]'); cv_lv=0 ;;
+  *) cv_label="" ;;
+esac
+
+# 설치된 플러그인만 표시한다. 둘 다 없으면 이 줄을 생략한다.
+plugin_installed() {
+  local f="$CFG/plugins/installed_plugins.json"
+  [ -f "$f" ] && jq -e --arg p "$1@" '.plugins // {} | keys | any(startswith($p))' "$f" >/dev/null 2>&1
+}
+badges=()
+plugin_installed ponytail && badges+=("$(plugin_badge $'\033[38;5;108m' Ponytail "$pt_label" "${pt_lv:-0}")")
+plugin_installed caveman && badges+=("$(plugin_badge $'\033[38;5;172m' Caveman "$cv_label" "${cv_lv:-0}")")
+if [ "${#badges[@]}" -gt 0 ]; then
+  plugin_line="${badges[0]}"
+  [ "${#badges[@]}" -gt 1 ] && plugin_line+=" ${GRAY}|${R} ${badges[1]}"
+  printf '%s\n\n' "$plugin_line"
+fi
 
 # ── 1줄: 모델과 effort ──
 model=$(j '.model.display_name'); model=${model:-Claude}

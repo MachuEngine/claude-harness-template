@@ -52,6 +52,9 @@ echo "== 상태 표시줄 =="
 python3 -c 'import json,sys; c=json.load(open(".claude/settings.json"))["statusLine"]["command"]; sys.exit(0 if c.endswith("/.claude/harness/statusline.sh") else 1)' \
   && ok "settings.json의 statusLine이 하네스 스크립트를 실행한다" || fail "settings.json에 statusLine 설정이 없다"
 if command -v jq >/dev/null 2>&1; then
+  # 개발자 컴퓨터의 플러그인 상태가 결과에 섞이지 않도록 빈 설정 폴더를 쓴다
+  export CLAUDE_CONFIG_DIR="$WORK/claude-config"
+  mkdir -p "$CLAUDE_CONFIG_DIR/plugins"
   now=$(date +%s)
   full="{\"model\":{\"display_name\":\"Opus 5.5\"},\"effort\":{\"level\":\"high\"},\"context_window\":{\"used_percentage\":42,\"context_window_size\":1000000,\"current_usage\":{\"input_tokens\":2,\"cache_creation_input_tokens\":1000,\"cache_read_input_tokens\":102000}},\"rate_limits\":{\"five_hour\":{\"used_percentage\":63,\"resets_at\":$((now + 7800))},\"seven_day\":{\"used_percentage\":85,\"resets_at\":$((now + 360000))}}}"
   out="$(printf '%s' "$full" | bash .claude/harness/statusline.sh | sed 's/\x1b\[[0-9;]*m//g')"
@@ -68,6 +71,25 @@ if command -v jq >/dev/null 2>&1; then
   else
     fail "값이 없을 때 출력이 다르다:"; echo "$out"
   fi
+  echo '{"plugins":{"ponytail@ponytail":[],"caveman@caveman":[]}}' > "$CLAUDE_CONFIG_DIR/plugins/installed_plugins.json"
+  echo full > "$CLAUDE_CONFIG_DIR/.ponytail-active"
+  mkdir -p "$CLAUDE_CONFIG_DIR/.caveman-sessions"
+  echo caveman > "$CLAUDE_CONFIG_DIR/.caveman-active"
+  echo ultracave > "$CLAUDE_CONFIG_DIR/.caveman-sessions/s1.mode"
+  out="$(printf '%s' '{"session_id":"s1","model":{"display_name":"Opus 5.5"}}' | bash .claude/harness/statusline.sh | sed 's/\x1b\[[0-9;]*m//g')"
+  if echo "$out" | head -1 | grep -q 'Ponytail ON .* FULL (2/3) | ● Caveman ON .* ULTRA (2/3)'; then
+    ok "설치된 플러그인의 모드를 표시한다 (Caveman은 세션별 모드 우선)"
+  else
+    fail "플러그인 모드 출력이 다르다:"; echo "$out"
+  fi
+  echo '{"plugins":{"caveman@caveman":[]}}' > "$CLAUDE_CONFIG_DIR/plugins/installed_plugins.json"
+  out="$(printf '%s' '{"model":{"display_name":"Opus 5.5"}}' | bash .claude/harness/statusline.sh | sed 's/\x1b\[[0-9;]*m//g')"
+  if ! echo "$out" | grep -q Ponytail && echo "$out" | head -1 | grep -q 'Caveman ON .* CAVEMAN (1/3)'; then
+    ok "설치되지 않은 플러그인은 표시하지 않는다"
+  else
+    fail "설치되지 않은 플러그인이 표시됐다:"; echo "$out"
+  fi
+  unset CLAUDE_CONFIG_DIR
 else
   echo "  [건너뜀] jq가 없어 상태 표시줄 출력 테스트를 건너뛴다"
 fi
